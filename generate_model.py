@@ -11,66 +11,92 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 
-def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1):
-    def get_a_layer(n_in, n_out, activation, dropout):
+def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
+    def get_a_layer(n_in, n_out, activation, dropout, end=False):
         seq = [nn.Dropout(dropout), nn.Linear(n_in, n_out),
                 activation]
-        return seq
-    layers = [get_a_layer(n_in, n_out, activation, dropout) for 
-              n_in, n_out in zip(n_hiddens, n_hiddens[1:])]
+        if end is True:
+            return seq[:-1]
+        else:
+            return seq
+    
+    layers = []
+    ii = 0
+    n_hidden = len(n_hiddens)
+    for n_in, n_out in zip(n_hiddens, n_hiddens[1:]):
+        if ii == n_hidden-1-1: # at last layer
+            layer = get_a_layer(n_in, n_out, activation, dropout, end=end)
+        else:
+            layer = get_a_layer(n_in, n_out, activation, dropout, end=False)
+        layers.append(layer)
+        ii += 1
+        
     layers = [ x for xs in layers for x in xs ]
     return nn.Sequential(*layers)
 
 class Net(nn.Module):
     def __init__(self, model=None, loss=None, 
-                 optimizer=None):
+                 optimizer=None, device='cuda'):
         super(Net, self).__init__()
         self.model = model
         self.loss = loss
         self.optimizer = optimizer
+        self.device = device
     
     def run_batch(self, i_batch, data):
         self.optimizer.zero_grad()
         data_in, tgt = data
-        data_in = data_in.to(device)
-        tgt = tgt.to(device)
+        data_in = data_in.to(self.device)
+        tgt = tgt.to(self.device)
         out = self.model(data_in)
         loss = self.loss(out, tgt)
         loss.backward()
         self.optimizer.step()
         return loss.detach().cpu().item()
     
-    def run_train(self, n_epoch, data):
+    def run_train(self, n_epoch, data, test_data=None):
         self.model.train()
         for i_epoch in range(n_epoch):
             loss = 0
-            n_batch = len(data)
             for i_batch, data_batch in enumerate(data):
                 loss_temp = self.run_batch(i_batch, data_batch)
                 loss += loss_temp
-                #print(i_batch, loss_temp)
-            loss /= 1.0*n_batch
+            loss /= 1.0*len(data)
             print('epoch', i_epoch, 'loss', loss)
             
+        if test_data is None:
+            return self.run_eval(test_data)
+        else:
+            return self.run_eval(data)
+        
     def run_eval(self, data):
         self.model.eval()
         loss = 0
-        for i_batch, data_batch in enumerate(data):
-            data_in, tgt = data_batch
-            out = self.model(data_in)
-            loss += self.loss(out, tgt).detach().cpu()
-        loss /= 1.0*i_batch
-        return out, loss
+        outs = None
+        with torch.no_grad():
+            for i_batch, data_batch in enumerate(data):
+                data_in, tgt = data_batch
+                data_in = data_in.to(self.device)
+                tgt = tgt.to(self.device)
+                out = self.model(data_in)
+                loss += self.loss(out, tgt).detach().cpu()
+                if outs is None:
+                    outs = out
+                else:
+                    outs = torch.cat((outs, out), dim=0)
+        loss /= 1.0*(i_batch+1)
+        print('evaluate', 'loss', loss)
+        return outs, loss
     
 class Autoencoder(Net):
     def __init__(self, model=None, loss=None, 
-                 optimizer=None):
-        super(Autoencoder, self).__init__(model, loss, optimizer)
+                 optimizer=None, device='cuda'):
+        super(Autoencoder, self).__init__(model, loss, optimizer, device)
     
     def run_batch(self, i_batch, data):
         self.optimizer.zero_grad()
         data_in, _ = data
-        data_in = data_in.to(device)
+        data_in = data_in.to(self.device)
         out = self.model(data_in)
         loss = self.loss(out, data_in)
         loss.backward()

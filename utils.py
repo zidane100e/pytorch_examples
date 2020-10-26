@@ -1,3 +1,7 @@
+import torch
+import numpy as np
+from sklearn.metrics import f1_score, accuracy_score
+
 def int2onehot(x, n_class):
     ret = torch.zeros(n_class)
     ret[x] = 1
@@ -20,6 +24,13 @@ def compute_accuracy(y_pred, y_target):
     precision = pred_tgt_true/len(y_target) * 100  
     
     return accuracy, precision
+
+def accuracy(out, tgt):
+    """
+    out after softmax
+    """
+    preds = np.argmax(out, axis=-1)
+    return accuracy_score(tgt, preds)
 
 if __name__ == '__main__':
     int2onehot(3, 10)
