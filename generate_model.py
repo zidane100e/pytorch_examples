@@ -11,6 +11,8 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 
+from utils import accuracy
+
 def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
     def get_a_layer(n_in, n_out, activation, dropout, end=False):
         seq = [nn.Dropout(dropout), nn.Linear(n_in, n_out),
@@ -42,20 +44,33 @@ class Net(nn.Module):
         self.loss = loss
         self.optimizer = optimizer
         self.device = device
+        self.softmax = nn.Softmax(dim=-1)
+    
+    def set_train(self):
+        self.model.train()
+    
+    def set_eval(self):
+        self.model.eval()
+    
+    def init_weights(self):
+        pass
+    
+    def forward(self, x):
+        return self.model(x)
     
     def run_batch(self, i_batch, data):
         self.optimizer.zero_grad()
         data_in, tgt = data
         data_in = data_in.to(self.device)
         tgt = tgt.to(self.device)
-        out = self.model(data_in)
+        out = self.forward(data_in)
         loss = self.loss(out, tgt)
         loss.backward()
         self.optimizer.step()
         return loss.detach().cpu().item()
     
     def run_train(self, n_epoch, data, test_data=None):
-        self.model.train()
+        self.set_train()
         for i_epoch in range(n_epoch):
             loss = 0
             for i_batch, data_batch in enumerate(data):
@@ -65,28 +80,34 @@ class Net(nn.Module):
             print('epoch', i_epoch, 'loss', loss)
             
         if test_data is None:
-            return self.run_eval(test_data)
-        else:
             return self.run_eval(data)
+        else:
+            return self.run_eval(test_data)
         
     def run_eval(self, data):
-        self.model.eval()
+        self.set_eval()
         loss = 0
         outs = None
+        tgts = None
         with torch.no_grad():
             for i_batch, data_batch in enumerate(data):
                 data_in, tgt = data_batch
                 data_in = data_in.to(self.device)
                 tgt = tgt.to(self.device)
-                out = self.model(data_in)
+                out = self.forward(data_in)
                 loss += self.loss(out, tgt).detach().cpu()
+                softmaxout = self.softmax(out).cpu().numpy()
+                tgt = tgt.cpu().numpy()
                 if outs is None:
-                    outs = out
+                    outs = softmaxout
+                    tgts = tgt
                 else:
-                    outs = torch.cat((outs, out), dim=0)
+                    outs = np.concatenate((outs, softmaxout), axis=0)
+                    tgts = np.concatenate((tgts, tgt), axis=0)
         loss /= 1.0*(i_batch+1)
         print('evaluate', 'loss', loss)
-        return outs, loss
+        print('accuracy', accuracy(outs, tgts))
+        return outs, tgts, loss
     
 class Autoencoder(Net):
     def __init__(self, model=None, loss=None, 

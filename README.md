@@ -1,5 +1,6 @@
 # pytorch_examples
-I upload some codes and explainations which can help to use pytorch.
+Pytorch codes for simple networks are presented.  
+It is made to be modular stones for other jobs.
 
 ## Classes
 
