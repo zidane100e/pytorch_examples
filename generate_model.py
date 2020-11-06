@@ -11,7 +11,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 
-from utils import accuracy
+from kbutils.evaluation import accuracy
 
 def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
     def get_a_layer(n_in, n_out, activation, dropout, end=False):
