@@ -23,3 +23,12 @@ It is made to be modular stones for other jobs.
 * Early stop
 * logger
 * configure
+
+### text processing
+1. tokenize
+    * spacy
+    * morphem analyzer
+2. vectorize
+    * spacy vectors
+    * glove
+    * BERT
