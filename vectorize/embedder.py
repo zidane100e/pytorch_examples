@@ -100,19 +100,25 @@ class Embedder():
             idss.append(ids)
             masks.append(mask)
             type_ids.append(type_id)
-        idss = torch.tensor(idss).to(device)
-        masks = torch.tensor(masks).to(device)
-        type_ids = torch.tensor(type_ids).to(device)
-        #type_ids = None # bert-multi gives different values
-        _, _, hiddens = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
-        context = torch.mean(hiddens[-2], dim=1)
+        with torch.no_grad():
+            idss = torch.tensor(idss).to(device)
+            masks = torch.tensor(masks).to(device)
+            type_ids = torch.tensor(type_ids).to(device)
+            #type_ids = None # bert-multi gives different values
+            _, _, hiddens = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
+            #context = torch.mean(hiddens[-2], dim=1)
+    
+            length = torch.sum(masks, dim=1)
+            length = torch.sqrt(length*1.0).unsqueeze(1)
+            masks2 = masks.unsqueeze(2)
+            context = torch.sum(hiddens[-2]*masks2, dim=1)/length
         return context
 
 if __name__ == '__main__':
     from vectorizer import Vectorizer
-
-    texts = ['i love you', 'what do you want', 'so missed you']
     
+    texts = ['i love you', 'what do you want', 'so missed you']
+    """
     tokenizer = KBTokenizer('spacy')
     glove_s = '/home/bwlee/data/glove/glove.6B.100d.txt'
     vectorizer = Vectorizer.from_glove(glove_s)
@@ -128,21 +134,24 @@ if __name__ == '__main__':
     embedder = Embedder(vectorizer, tokenizer)
     vec1 = embedder(texts)
     print(vec1)
-
+    """
     pre_trained = 'sktkobert'
     tokenizer = KBTokenizer(pre_trained)
     vectorizer = Vectorizer.from_bert(pre_trained, len_sent=100)
     embedder = Embedder(vectorizer, tokenizer)
     vec1 = embedder(texts)
     print(vec1)
-
+    vec2 = embedder._call_bert_test(texts)
+    print('----------------------------------------------')
+    print(vec2)
+    """
     pre_trained = 'bert-multi'
     tokenizer = KBTokenizer(pre_trained)
     vectorizer = Vectorizer.from_bert(pre_trained, len_sent=100)
     embedder = Embedder(vectorizer, tokenizer)
     vec1 = embedder(texts)
     print(vec1)
-
+    """
     
     
 

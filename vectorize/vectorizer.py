@@ -10,7 +10,6 @@ import numpy as np
 import copy as cp
 
 from config import *
-from utils import *
 from tokenizer import KBTokenizer
 
 def load_glove(f1_s, n_tag = -1):
