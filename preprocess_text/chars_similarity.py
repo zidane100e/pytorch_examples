@@ -54,25 +54,26 @@ def title_char_distance(titles, id1, ids, limit=0.3):
             simils_ids.append(id2)
     return simils_ids
     
-def similar_titles(titles, ids, groups):
+def similar_titles(titles, ids, groups=None):
     """
     for a title compare char dist for all other titles
     find similar items and subtract them
-    operate recursively
     :titles: input text
     :ids: only see ids of text
     :param groups: this modifies groups. gives all groups, You need to select one from each groups
     """
-    if len(ids)<1: 
-        return groups
-    id1 = ids[0]
-    ids = ids[1:]
-    
-    similars = title_char_distance(titles, id1, ids)
-    groups.append([id1] + similars)
-    ids = list(set(ids) - set(similars))
-    similar_titles(titles, ids, groups)
-    
+    if groups is None:
+        groups = []
+        
+    while len(ids)>=1:         
+        id1 = ids[0]
+        ids = ids[1:]
+
+        similars = title_char_distance(titles, id1, ids)
+        groups.append([id1] + similars)
+        ids = list(set(ids) - set(similars))
+        
+    return groups
     
 if __name__ == '__main__':
     # titles = df['title'].tolist()

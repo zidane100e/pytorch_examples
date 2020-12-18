@@ -49,7 +49,6 @@ def dtw(seq1, seq2, n_window, distance, dist_small=True, edge_cost=None):
 
     # find the closest or farthest path
     paths = [(n_row-1,n_col-1,costs[n_row-1,n_col-1])]
-    #print(path[c])
     flag_finished = False
     i = n_row - 1
     j = n_col - 1
@@ -74,21 +73,19 @@ def dtw(seq1, seq2, n_window, distance, dist_small=True, edge_cost=None):
             j = j-1
             paths.append((i,j,move_cost))
 
-        if i==0 and j==0:
+        if i<=0 and j<=0:
             flag_finished = True
-        elif i==0:
+        elif i<=0:
             for j1 in range(j-1,-1, -1):
                 paths.append((0, j1, costs[0, j1]))
             flag_finished = True
-        elif j==0:
+        elif j<=0:
             for i1 in range(i-1, -1, -1):
                 paths.append((i1, 0, costs[i1, 0]))
             flag_finished = True
-
     paths.reverse()
     paths_seq1 = [x[0] for x in paths]
     paths_seq2 = [x[1] for x in paths]
-    #print(n_row, n_col, paths)
     
     return paths[-1][2]/len(paths_seq1), paths_seq1, paths_seq2
 
