@@ -134,6 +134,31 @@ class Vectorizer():
         elif 'bert' in pre_trained :
             inst1.n_tag = inst1.tokenizer.vocab_size
             inst1.ix2tag = inst1.tokenizer.ids_to_tokens
+            
+        if pre_trained == 'bert-multi':
+            inst1.ix_PAD = 0
+            inst1.ix_UNK = 100
+            inst1.ix_CLS = 101
+            inst1.ix_SEP = 102
+        elif pre_trained == 'sktkobert':
+            inst1.ix_UNK = 0
+            inst1.ix_PAD = 1
+            inst1.ix_CLS = 2
+            inst1.ix_SEP = 3
+        elif pre_trained == 'kbalbert':
+            inst1.ix_PAD = 0
+            inst1.ix_UNK = 1
+            inst1.ix_CLS = 2
+            inst1.ix_SEP = 3
+        else:
+            if 'bert' in pre_trained:
+                inst1.ix_PAD = 0
+                inst1.ix_UNK = 100
+                inst1.ix_CLS = 101
+                inst1.ix_SEP = 102
+            else:
+                raise Exception('Check bert name')
+                
         return inst1
 
     def _get_attention_mask(self, len_sent, valid_length):
@@ -147,32 +172,15 @@ class Vectorizer():
         """
         if type(seq) is str:
             seq = self.tokenizer.tokenize(seq)
-
-        if self.pre_trained == 'bert-multi':
-            ix_PAD = 0
-            ix_UNK = 100
-            ix_CLS = 101
-            ix_SEP = 102
-        elif self.pre_trained == 'sktkobert':
-            ix_UNK = 0
-            ix_PAD = 1
-            ix_CLS = 2
-            ix_SEP = 3
-        elif self.pre_trained == 'kbalbert':
-            ix_PAD = 0
-            ix_UNK = 1
-            ix_CLS = 2
-            ix_SEP = 3
-        else:
-            raise Exception('Check bert name')
-        input_ids = [ self.tokenizer.vocab[token] if token in self.tokenizer.vocab else ix_UNK for token in seq ]
+        
+        input_ids = [ self.tokenizer.vocab[token] if token in self.tokenizer.vocab else self.ix_UNK for token in seq ]
         
         if len(input_ids) < self.len_sent-2: # [CLS], [SEP] need to be attached 
             length = len(input_ids) + 2
-            input_ids = [ix_CLS] + input_ids + [ix_SEP] + [ix_PAD]*(self.len_sent-2-len(input_ids))
+            input_ids = [self.ix_CLS] + input_ids + [self.ix_SEP] + [self.ix_PAD]*(self.len_sent-2-len(input_ids))
         else:
             length = self.len_sent
-            input_ids = [ix_CLS] + input_ids[:self.len_sent-2] + [ix_SEP]
+            input_ids = [self.ix_CLS] + input_ids[:self.len_sent-2] + [self.ix_SEP]
         attention_mask = self._get_attention_mask(len(input_ids), length)
         type_id = [0] * self.len_sent
         return (input_ids, attention_mask, type_id)

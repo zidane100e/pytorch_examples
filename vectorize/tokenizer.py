@@ -75,10 +75,12 @@ class KBTokenizer():
             elif flag_char is True:
                 chars = [ self.tok2chars(token, special_chars) for token in tokens ]
                 return tokens, chars
-        elif self.tokenizer_s in ['bert-multi', 'kbalbert']:
-            return self.tokenizer.tokenize(sent)
         elif self.tokenizer_s == 'sktkobert':
             return self.tokenizer(sent)
+        #elif self.tokenizer_s in ['bert-multi', 'kbalbert']:
+        elif 'bert' in self.tokenizer_s:
+            return self.tokenizer.tokenize(sent)
+        
             
     def _index_repetitive(self, obj, element):        
         """
