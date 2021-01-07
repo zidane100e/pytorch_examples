@@ -44,7 +44,11 @@ class KBTokenizer():
             self.tokenizer = KbAlbertCharTokenizer.from_pretrained(model_path)
             self.vocab = self.tokenizer.vocab
         else:
-            if type(tokenizer_s) is not str:
+            if type(tokenizer_s) is str:
+                from transformers import BertTokenizer, BertModel, BertConfig
+                self.tokenizer = BertTokenizer.from_pretrained(tokenizer_s)
+                self.vocab = self.tokenizer.vocab
+            elif type(tokenizer_s) is not str:
                 self.tokenizer = tokenizer_s
                 self.tokenizer_s = 'custom'
             else:

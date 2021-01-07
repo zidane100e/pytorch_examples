@@ -31,13 +31,18 @@ class Embedder():
                 #from pytorch_kobert3 import get_pytorch_kobert_model
                 self.bert, _ = get_pytorch_kobert_model()
                 self.bert = self.bert.to(device)
-            if pre_trained == 'kbalbert':
+            elif pre_trained == 'kbalbert':
                 sys.path.append('/home/bwlee/work/codes/KB-ALBERT-KO/kb-albert-char/')
                 from transformers import AlbertModel
                 kbalbert_path = '/home/bwlee/work/codes/KB-ALBERT-KO/kb-albert-char/model'
                 self.bert = AlbertModel.from_pretrained(kbalbert_path, 
                                     output_hidden_states=True)
                 self.bert = self.bert.to(device)
+            else:
+                from transformers import BertModel, BertConfig
+                bert_config = BertConfig.from_pretrained(pre_trained,
+                                                    output_hidden_states=True)
+                self.bert = BertModel(bert_config).to(device)
         else:
             self.tag2vec = self.vectorizer.tag2vec
             self.n_vocab = len(self.vectorizer.tag2vec)
@@ -100,15 +105,15 @@ class Embedder():
             idss.append(ids)
             masks.append(mask)
             type_ids.append(type_id)
+            
         with torch.no_grad():
             idss = torch.tensor(idss).to(device)
             masks = torch.tensor(masks).to(device)
             type_ids = torch.tensor(type_ids).to(device)
             #type_ids = None # bert-multi gives different values
             _, _, hiddens = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
-            #context = torch.mean(hiddens[-2], dim=1)
     
-            length = torch.sum(masks, dim=1)
+            length = torch.sum(masks, dim=1) # lengths of words in each sentence
             length = torch.sqrt(length*1.0).unsqueeze(1)
             masks2 = masks.unsqueeze(2)
             context = torch.sum(hiddens[-2]*masks2, dim=1)/length

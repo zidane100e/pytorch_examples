@@ -130,7 +130,8 @@ class Vectorizer():
         if pre_trained == 'sktkobert':
             inst1.n_tag = len(inst1.tokenizer.vocab)
             inst1.ix2tag = inst1.tokenizer.vocab.idx_to_token
-        elif pre_trained in ['bert-multi', 'kbalbert']:
+        #elif pre_trained in ['bert-multi', 'kbalbert']:
+        elif 'bert' in pre_trained :
             inst1.n_tag = inst1.tokenizer.vocab_size
             inst1.ix2tag = inst1.tokenizer.ids_to_tokens
         return inst1

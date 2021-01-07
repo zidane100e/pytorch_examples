@@ -71,8 +71,8 @@ class Net(nn.Module):
         return loss.detach().cpu().item()
     
     def run_train(self, n_epoch, data, test_data=None):
-        self.set_train()
         for i_epoch in range(n_epoch):
+            self.set_train()
             loss = 0
             for i_batch, data_batch in enumerate(data):
                 loss_temp = self.run_batch(i_batch, data_batch)
