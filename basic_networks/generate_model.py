@@ -10,8 +10,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
-import sys
-sys.path.append('/home/bwlee/work/codes/examples/')
+
+import os, pathlib, sys
+module_dir = pathlib.Path(__file__).parent.parent.absolute()
+sys.path.append(str(module_dir))
 from kbutils.evaluation import accuracy
 
 def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
