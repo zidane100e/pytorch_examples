@@ -1,4 +1,5 @@
 """
+this gives sentence meaned embedding values
 text --> tokenizer --> vectorizer --> embedder : context
 (BERT embedder include vectorizer 
 """
@@ -56,7 +57,7 @@ class Embedder():
         if bias is not None:
             self.embed.bias.data = bias
 
-    def __call__(self, text_arr):
+    def __call__(self, text_arr, flag_sent=True):
         """
         check type_ids=None gives different result in bert-multi
         :param text_arr: accepts text in iterable form like batch
@@ -70,7 +71,7 @@ class Embedder():
         elif self.pre_trained == 'glove':
             return self._call_glove(text_arr)
         elif 'bert' in self.pre_trained:
-            return self._call_bert(text_arr)
+            return self._call_bert(text_arr, flag_sent)
 
     def _call_manual(self, text_arr):
         """
@@ -97,7 +98,7 @@ class Embedder():
         vecs.append(vec)
         return torch.tensor(vecs)
 
-    def _call_bert(self, text_arr):
+    def _call_bert(self, text_arr, flag_sent):
         idss, masks, type_ids = [], [], []
         for text in text_arr:
             seq = self.tokenizer.tokenize(text)
@@ -111,12 +112,15 @@ class Embedder():
             masks = torch.tensor(masks).to(device)
             type_ids = torch.tensor(type_ids).to(device)
             #type_ids = None # bert-multi gives different values
-            _, _, hiddens = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
-    
-            length = torch.sum(masks, dim=1) # lengths of words in each sentence
-            length = torch.sqrt(length*1.0).unsqueeze(1)
-            masks2 = masks.unsqueeze(2)
-            context = torch.sum(hiddens[-2]*masks2, dim=1)/length
+            clss, last, hiddens = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
+            
+            if flag_sent is True:
+                length = torch.sum(masks, dim=1) # lengths of words in each sentence
+                length = torch.sqrt(length*1.0).unsqueeze(1)
+                masks2 = masks.unsqueeze(2)
+                context = torch.sum(hiddens[-2]*masks2, dim=1)/length
+            else:
+                return clss, last, hiddens
         return context
 
 if __name__ == '__main__':
