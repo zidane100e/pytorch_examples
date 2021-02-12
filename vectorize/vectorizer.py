@@ -12,6 +12,9 @@ import copy as cp
 from config import *
 from tokenizer import KBTokenizer
 
+def ppp():
+    print([UNK_TAG, PAD_TAG, START_TAG, STOP_TAG])
+    
 def load_glove(f1_s, n_tag = -1):
     """
     n_tag :  limit vocabulary
@@ -133,7 +136,10 @@ class Vectorizer():
         #elif pre_trained in ['bert-multi', 'kbalbert']:
         elif 'bert' in pre_trained :
             inst1.n_tag = inst1.tokenizer.vocab_size
-            inst1.ix2tag = inst1.tokenizer.ids_to_tokens
+            ix2tag = {}
+            for key, val in inst1.tokenizer.vocab.items():
+                ix2tag[val] = key
+            inst1.ix2tag = ix2tag
             
         if pre_trained == 'bert-multi':
             inst1.ix_PAD = 0
@@ -145,7 +151,7 @@ class Vectorizer():
             inst1.ix_PAD = 1
             inst1.ix_CLS = 2
             inst1.ix_SEP = 3
-        elif pre_trained == 'kbalbert':
+        elif 'albert' in pre_trained:
             inst1.ix_PAD = 0
             inst1.ix_UNK = 1
             inst1.ix_CLS = 2

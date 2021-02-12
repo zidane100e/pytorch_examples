@@ -39,11 +39,11 @@ class Embedder():
                 self.bert = AlbertModel.from_pretrained(kbalbert_path, 
                                     output_hidden_states=True)
                 self.bert = self.bert.to(device)
-            else:
-                from transformers import BertModel, BertConfig
-                bert_config = BertConfig.from_pretrained(pre_trained,
+            else: 
+                from transformers import AutoModel, AutoConfig
+                bert_config = AutoConfig.from_pretrained(pre_trained,
                                                     output_hidden_states=True)
-                self.bert = BertModel(bert_config).to(device)
+                self.bert = AutoModel.from_config(bert_config).to(device)
         else:
             self.tag2vec = self.vectorizer.tag2vec
             self.n_vocab = len(self.vectorizer.tag2vec)
@@ -112,16 +112,22 @@ class Embedder():
             masks = torch.tensor(masks).to(device)
             type_ids = torch.tensor(type_ids).to(device)
             #type_ids = None # bert-multi gives different values
-            clss, last, hiddens = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
+            outs = self.bert(idss, attention_mask=masks, token_type_ids=type_ids) #kbalbert
+            if type(outs) == tuple:
+                clss, last, hiddens = outs
+            else:
+                last = outs.last_hidden_state
+                clss = outs.pooler_output
+                hiddens = outs.hidden_states
             
             if flag_sent is True:
                 length = torch.sum(masks, dim=1) # lengths of words in each sentence
                 length = torch.sqrt(length*1.0).unsqueeze(1)
                 masks2 = masks.unsqueeze(2)
                 context = torch.sum(hiddens[-2]*masks2, dim=1)/length
+                return context
             else:
                 return clss, last, hiddens
-        return context
 
 if __name__ == '__main__':
     from vectorizer import Vectorizer
