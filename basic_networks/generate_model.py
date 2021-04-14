@@ -20,7 +20,7 @@ from kbutils.evaluation import accuracy
 
 def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
     """
-    :param end: True = no activation at the end, False = activation at the end
+    :param end: True = regression(no activation at the end), False = activation at the end
     """
     def get_a_layer(n_in, n_out, activation, dropout, end=False):
         seq = [nn.Dropout(dropout), nn.Linear(n_in, n_out),
