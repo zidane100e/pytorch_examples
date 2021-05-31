@@ -3,13 +3,16 @@ import numpy as np
 from sklearn.metrics import f1_score, accuracy_score
 
 def argmax(vec):
-    # return the argmax as a python int
+    """
+    :return: the argmax as a python int
+    """
     _, idx = torch.max(vec, 1)
     return idx.item()
 
 def compute_accuracy(y_pred, y_target):
     """
     f1_score = precision = recall in case len(pred) == len(target)
+    :return: (accuracy, precision)
     """
     y_pred_indices = (torch.sigmoid(y_pred)>0.5).cpu().long()#.max(dim=1)[1]
     

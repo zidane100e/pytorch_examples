@@ -18,9 +18,14 @@ module_dir = pathlib.Path(__file__).parent.parent.absolute()
 sys.path.append(str(module_dir))
 from kbutils.evaluation import accuracy
 
-def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
+def get_MLP(dim_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
     """
+    help to easily build an MLP model
+    >>> encoder = get_MLP([784, 128, 64, 32])
+    
+    :param dim_hiddens: list of hidden layer sizes
     :param end: True = regression(no activation at the end), False = activation at the end
+    :return: Sequential of pytorch MLP
     """
     def get_a_layer(n_in, n_out, activation, dropout, end=False):
         seq = [nn.Dropout(dropout), nn.Linear(n_in, n_out),
@@ -32,8 +37,8 @@ def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
     
     layers = []
     ii = 0
-    n_hidden = len(n_hiddens)
-    for n_in, n_out in zip(n_hiddens, n_hiddens[1:]):
+    n_hidden = len(dim_hiddens)
+    for n_in, n_out in zip(dim_hiddens, dim_hiddens[1:]):
         if ii == n_hidden-1-1: # at last layer
             layer = get_a_layer(n_in, n_out, activation, dropout, end=end)
         else:
@@ -45,6 +50,10 @@ def get_MLP(n_hiddens, activation=nn.ReLU(), dropout=0.1, end=False):
     return nn.Sequential(*layers)
 
 class Net(nn.Module):
+    """
+    This class defines network learning and test behaviors. 
+    It gets model, loss and optimizer
+    """
     def __init__(self, model=None, loss=None, 
                  optimizer=None, device='cuda'):
         super(Net, self).__init__()
@@ -55,18 +64,34 @@ class Net(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
     
     def set_train(self):
+        """
+        initialization for training
+        """
         self.model.train()
     
     def set_eval(self):
+        """
+        initialization for evaluation
+        """
         self.model.eval()
     
     def init_weights(self):
+        """
+        describe weight initialization method
+        """
         pass
     
     def forward(self, x):
+        """
+        describe network forward action
+        """
         return self.model(x)
     
     def run_batch(self, i_batch, data):
+        """
+        learning method for a batch.
+        You can override this in sub-class
+        """
         self.optimizer.zero_grad()
         data_in, tgt = data
         data_in = data_in.to(self.device)
@@ -78,6 +103,11 @@ class Net(nn.Module):
         return loss.detach().cpu().item()
     
     def run_train(self, n_epoch, data, test_data=None, eval_step=1):
+        """
+        training method definition
+        :param data: training data
+        :param test_data: validation data
+        """
         for i_epoch in range(n_epoch):
             self.set_train()
             loss = 0
@@ -95,6 +125,10 @@ class Net(nn.Module):
                     self.run_eval(test_data)
         
     def run_eval(self, data):
+        """
+        test method definition
+        :return: (prediction, target, loss)
+        """
         self.set_eval()
         loss = 0
         outs = None
@@ -119,6 +153,18 @@ class Net(nn.Module):
         return outs, tgts, loss
     
 class Autoencoder(Net):
+    """
+    class for Autoencoder
+    
+    >>> dims = [784, 128, 64, 32]
+    >>> encoder = get_MLP(dims)
+    >>> decoder = get_MLP(list(reversed(dims)))
+    >>> ae_model = nn.Sequential(encoder, decoder)
+    >>> loss = nn.MSELoss()
+    >>> optimizer = optim.Adam(ae_model.parameters())
+    >>> ae = Autoencoder(model=ae_model, loss=loss, optimizer=optimizer)
+    >>> ae.run_train(100, train_loader)
+    """
     def __init__(self, model=None, loss=None, 
                  optimizer=None, device='cuda'):
         super(Autoencoder, self).__init__(model, loss, optimizer, device)

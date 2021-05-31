@@ -64,6 +64,8 @@ class KBTokenizer():
                  special_chars=[PAD_TAG, UNK_TAG]):
         """
         tokenize sentence to token
+        :param sent: ex.'i love you'
+        :return: ['i', 'love', 'you']
         """
         if self.tokenizer_s == 'spacy':
             for char in special_chars:

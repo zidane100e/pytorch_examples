@@ -217,6 +217,10 @@ class Vectorizer():
         return self(seq, add_pad, add_beginend, len_sent)
     
     def __call__(self, seq, add_pad=False, add_beginend=False, len_sent=-1):
+        """
+        :param seq: list of token, ['i'. 'love', 'you']
+        :return: (token_ids, masks, ...), special tokens are padded
+        """
         if self.pre_trained is not None and 'bert' in self.pre_trained.lower():
             return self.get_ids_bert(seq)
         else:
