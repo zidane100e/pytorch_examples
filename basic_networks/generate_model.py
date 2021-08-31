@@ -108,6 +108,7 @@ class Net(nn.Module):
         :param data: training data
         :param test_data: validation data
         """
+        ret_eval = None
         for i_epoch in range(n_epoch):
             self.set_train()
             loss = 0
@@ -115,14 +116,17 @@ class Net(nn.Module):
                 loss_temp = self.run_batch(i_batch, data_batch)
                 loss += loss_temp
             loss /= 1.0*len(data)
-            print('epoch', i_epoch, 'loss', loss)
-            
+            if self.verbose is False:
+                print('epoch', i_epoch, 'loss', loss)
+
             if eval_step>0 and (i_epoch+1)%eval_step==0:
                 if test_data is None:
                     print('eval_train', end=' ')
-                    self.run_eval(data)
+                    ret_eval = self.run_eval(data)
                 else:
-                    self.run_eval(test_data)
+                    ret_eval = self.run_eval(test_data)
+
+        return ret_eval
         
     def run_eval(self, data):
         """
