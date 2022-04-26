@@ -32,3 +32,7 @@ It is made to be modular stones for other jobs.
     * spacy vectors
     * glove
     * BERT
+
+
+### Korean business day
+* use package holidays[https://pypi.org/project/holidays/] and slightly modified for fast update
